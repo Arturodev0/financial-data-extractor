@@ -1,0 +1,21 @@
+# --- DATA SAFETY (Never upload these) ---
+*.xlsx
+*.xls
+*.csv
+*.json
+*.xml
+
+# --- Python internals ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# --- Virtual Environments ---
+env/
+venv/
+.env
+
+# --- OS generated files ---
+.DS_Store
+Thumbs.db
