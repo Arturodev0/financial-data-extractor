@@ -5,95 +5,90 @@ import pandas as pd
 # CONFIGURATION SECTION
 # ==========================================
 # Define your Excel file name here. It must be in the same folder as this script.
-NOMBRE_ARCHIVO = "Data_Financiera.xlsx"
+FILE_NAME = "Data_Financiera.xlsx"
 
 # Name of the worksheet inside the Excel file
-NOMBRE_HOJA = "DataBase Combined"
+SHEET_NAME = "DataBase Combined"
 
 # Define which year you want to analyze
-ANIO_ANALISIS = 2025
+ANALYSIS_YEAR = 2025
 
-
-COL_FECHA = "Date"
-COL_MONTO = "Amount"
-COL_CATEGORIA_PRINCIPAL = "Grandparent"
-COL_SUB_CATEGORIA = "Parent"
-COL_CLASE = "Class"
-COL_FUENTE = "Source"
+COL_DATE = "Date"
+COL_AMOUNT = "Amount"
+COL_MAIN_CATEGORY = "Grandparent"
+COL_SUB_CATEGORY = "Parent"
+COL_CLASS = "Class"
+COL_SOURCE = "Source"
 
 # Specific filters
-FILTRO_CATEGORIA_PRINCIPAL = "Income Statement" # Main (top-level) category to filter
-FILTRO_ZOOM = "2 COGS"                          # Specific category (zoom-in)
+FILTER_MAIN_CATEGORY = "Income Statement"  # Main (top-level) category to filter
+FILTER_ZOOM = "2 COGS"                      # Specific category (zoom-in)
 
 
-
-def procesar_datos():
+def process_data():
     # 1. Locate the file
     base_dir = Path(__file__).resolve().parent
-    ruta_archivo = base_dir / NOMBRE_ARCHIVO
+    file_path = base_dir / FILE_NAME
 
     print(f"--- Starting process ---")
-    print(f"Looking for file at: {ruta_archivo}")
+    print(f"Looking for file at: {file_path}")
 
-    if not ruta_archivo.exists():
-        print(f"ERROR: I couldn't find the file '{NOMBRE_ARCHIVO}'. Please check that it's in the folder.")
+    if not file_path.exists():
+        print(f"ERROR: I couldn't find the file '{FILE_NAME}'. Please check that it's in the folder.")
         return
 
     # 2. Load data
     try:
         print("Loading Excel... this may take a bit if the file is large.")
-        df = pd.read_excel(ruta_archivo, sheet_name=NOMBRE_HOJA)
+        df = pd.read_excel(file_path, sheet_name=SHEET_NAME)
     except Exception as e:
         print(f"An error occurred while reading the Excel file: {e}")
         return
 
- 
-    df[COL_FECHA] = pd.to_datetime(df[COL_FECHA], errors="coerce")
+    df[COL_DATE] = pd.to_datetime(df[COL_DATE], errors="coerce")
 
-   
-    print(f"Filtering data for year {ANIO_ANALISIS} and category '{FILTRO_CATEGORIA_PRINCIPAL}'...")
-    
-    df_filtrado = df[
-        (df[COL_CATEGORIA_PRINCIPAL] == FILTRO_CATEGORIA_PRINCIPAL)
-        & (df[COL_FECHA].dt.year == ANIO_ANALISIS)
+    print(f"Filtering data for year {ANALYSIS_YEAR} and category '{FILTER_MAIN_CATEGORY}'...")
+
+    filtered_df = df[
+        (df[COL_MAIN_CATEGORY] == FILTER_MAIN_CATEGORY)
+        & (df[COL_DATE].dt.year == ANALYSIS_YEAR)
     ].copy()
 
-    if df_filtrado.empty:
+    if filtered_df.empty:
         print("Warning: No data found with those filters.")
         return
 
-   
-    resumen = (
-        df_filtrado
-        .groupby([COL_SUB_CATEGORIA, COL_CLASE], dropna=False)[COL_MONTO]
+    summary = (
+        filtered_df
+        .groupby([COL_SUB_CATEGORY, COL_CLASS], dropna=False)[COL_AMOUNT]
         .sum()
         .reset_index()
-        .sort_values([COL_SUB_CATEGORIA, COL_CLASE])
+        .sort_values([COL_SUB_CATEGORY, COL_CLASS])
     )
 
-    nombre_csv_resumen = f"reporte_{ANIO_ANALISIS}_resumen_general.csv"
-    resumen.to_csv(nombre_csv_resumen, index=False)
-    print(f"-> Done! Saved the general summary to: {nombre_csv_resumen}")
+    summary_csv_name = f"report_{ANALYSIS_YEAR}_general_summary.csv"
+    summary.to_csv(summary_csv_name, index=False)
+    print(f"-> Done! Saved the general summary to: {summary_csv_name}")
 
- 
-    print(f"Generating detailed report for: '{FILTRO_ZOOM}'...")
-    
-    df_zoom = df_filtrado[df_filtrado[COL_SUB_CATEGORIA] == FILTRO_ZOOM].copy()
+    print(f"Generating detailed report for: '{FILTER_ZOOM}'...")
 
-    if not df_zoom.empty:
-        resumen_zoom = (
-            df_zoom
-            .groupby([COL_FUENTE, COL_CLASE], dropna=False)[COL_MONTO]
+    zoom_df = filtered_df[filtered_df[COL_SUB_CATEGORY] == FILTER_ZOOM].copy()
+
+    if not zoom_df.empty:
+        zoom_summary = (
+            zoom_df
+            .groupby([COL_SOURCE, COL_CLASS], dropna=False)[COL_AMOUNT]
             .sum()
             .reset_index()
-            .sort_values([COL_FUENTE, COL_CLASE])
+            .sort_values([COL_SOURCE, COL_CLASS])
         )
 
-        nombre_csv_zoom = f"reporte_{ANIO_ANALISIS}_detalle_{FILTRO_ZOOM.replace(' ', '_')}.csv"
-        resumen_zoom.to_csv(nombre_csv_zoom, index=False)
-        print(f"-> Done! Saved the specific detail report to: {nombre_csv_zoom}")
+        zoom_csv_name = f"report_{ANALYSIS_YEAR}_detail_{FILTER_ZOOM.replace(' ', '_')}.csv"
+        zoom_summary.to_csv(zoom_csv_name, index=False)
+        print(f"-> Done! Saved the specific detail report to: {zoom_csv_name}")
     else:
-        print(f"No data found for category '{FILTRO_ZOOM}', so that report was not generated.")
+        print(f"No data found for category '{FILTER_ZOOM}', so that report was not generated.")
+
 
 if __name__ == "__main__":
-    procesar_datos()
+    process_data()
