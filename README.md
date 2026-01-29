@@ -2,7 +2,7 @@
 
 A robust Python ETL (Extract, Transform, Load) tool designed to process financial Excel reports. It automates the extraction of specific financial indicators (like "Income Statement" or "COGS"), cleans the data, and generates granular CSV reports for further analysis.
 
-## 🚀 Features
+##  Features
 
 - **Automated Extraction:** Reads large Excel datasets and filters by specific fiscal years.
 - **Data Cleaning:** Handles date formatting and missing values automatically.
